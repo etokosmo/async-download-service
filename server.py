@@ -47,6 +47,7 @@ async def archive(request):
         raise
     finally:
         process.kill()
+        await process.communicate()
         return response
 
 
