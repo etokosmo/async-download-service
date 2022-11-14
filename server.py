@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from functools import partial
 
 import aiofiles
 from aiohttp import web
@@ -11,9 +12,9 @@ CHUNK_SIZE = 100  # in kilobytes
 logger = logging.getLogger(__name__)
 
 
-async def archive(request, process_delay=None, base_archive_path=None):
+async def archive(request, base_archive_path, process_delay=None):
     archive_hash = request.match_info.get('archive_hash')
-    archive_path = os.path.join('test_photos', archive_hash)
+    archive_path = os.path.join(base_archive_path, archive_hash)
     # TODO import 'test_photos' from env or as argument
     if not os.path.exists(archive_path):
         raise web.HTTPNotFound(text='Архив не существует или был удален')
@@ -72,9 +73,10 @@ if __name__ == '__main__':
     if not activate_logs:
         logging.disable()
 
+    archive_with_args = partial(archive, base_archive_path=base_archive_path)
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
-        web.get('/archive/{archive_hash}/', archive),
+        web.get('/archive/{archive_hash}/', archive_with_args),
     ])
     web.run_app(app)
