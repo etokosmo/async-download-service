@@ -32,16 +32,16 @@ async def archive(request, base_archive_path, process_delay):
     await response.prepare(request)
 
     try:
-        counter = 1
+        chunk_counter = 1
         while not process.stdout.at_eof():
             # read data in chunk converted from kilobytes to bytes
             chunk = await process.stdout.read(CHUNK_SIZE * 1024)
             if process_delay:
                 await asyncio.sleep(process_delay)
             logging.info(
-                f'{counter * CHUNK_SIZE}Kb: Sending archive chunk ...')
+                f'{chunk_counter * CHUNK_SIZE}Kb: Sending archive chunk ...')
             await response.write(chunk)
-            counter += 1
+            chunk_counter += 1
 
     except asyncio.CancelledError:
         logger.error('Download was interrupted')
