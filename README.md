@@ -1,12 +1,14 @@
-# Микросервис для скачивания файлов
+# Microservice for downloading files
 
-Микросервис помогает работе основного сайта, сделанного на CMS и обслуживает
-запросы на скачивание архивов с файлами. Микросервис не умеет ничего, кроме упаковки файлов
-в архив. Закачиваются файлы на сервер через FTP или админку CMS.
+## About
 
-Создание архива происходит на лету по запросу от пользователя. Архив не сохраняется на диске, вместо этого по мере упаковки он сразу отправляется пользователю на скачивание.
+Microservice helps the work of the main site made on CMS and serves
+requests to download archives with files. Microservice can do nothing but pack files
+to the archive. Files are uploaded to the server via FTP or CMS admin panel.
 
-От неавторизованного доступа архив защищен хешом в адресе ссылки на скачивание, например: `http://host.ru/archive/3bea29ccabbbf64bdebcc055319c5745/`. Хеш задается названием каталога с файлами, выглядит структура каталога так:
+The creation of the archive quickly upon request of the user. The archive is not stored on disk; instead, as it is packaged, it is immediately sent to the user for download.
+
+The archive is protected from unauthorized access by a hash in the download link address, for example: `http://host.ru/archive/3bea29ccabbbf64bdebcc055319c5745/`. The hash is given by the name of the directory with the files, the directory structure looks like this:
 
 ```
 - photos
@@ -19,36 +21,61 @@
       - 2.jpg
 ```
 
+## Configurations
 
-## Как установить
+* Python version: 3.10
+* Libraries: [requirements.txt](https://github.com/etokosmo/async-download-service/blob/master/requirements.txt)
 
-Для работы микросервиса нужен Python версии не ниже 3.6.
+## Launch
+
+### Local server
+
+- Download code
+- Through the console in the directory with the code, install the virtual
+  environment with the command:
+
+```bash
+python3 -m venv env
+```
+
+- Activate the virtual environment with the command:
+
+```bash
+source env/bin/activate
+```
+
+- Install the libraries with the command:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Как запустить
+- Write the environment variables in the `.env` file in the format KEY=VALUE
+
+`BASE_ARCHIVE_PATH` - string value. Specify the path to the directory with photos. Default = `test_photos`.
+
+`ACTIVATE_LOGS` - bool value (`True` or `False`). Enable or disable logging. Default = True.
+
+`PROCESS_DELAY` - positive integer value (`1`, `2`, `3` etc.). Enable response delay. Default = 0 (no delay).
+
+> P.S. Default values are already set
+
+- Run local server with the command (it will be available
+  at http://127.0.0.1:8080/):
 
 ```bash
 python server.py
 ```
 
-Сервер запустится на порту 8080, чтобы проверить его работу перейдите в браузере на страницу [http://127.0.0.1:8080/](http://127.0.0.1:8080/).
-
-## Как развернуть на сервере
+## How to deploy to the server
 
 ```bash
 python server.py
 ```
 
-После этого перенаправить на микросервис запросы, начинающиеся с `/archive/`. Например:
+After that, redirect requests starting with `/archive/` to the microservice. For example:
 
 ```
 GET http://host.ru/archive/3bea29ccabbbf64bdebcc055319c5745/
 GET http://host.ru/archive/af1ad8c76fda2e48ea9aed2937e972ea/
 ```
-
-# Цели проекта
-
-Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org).
