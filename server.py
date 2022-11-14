@@ -12,10 +12,9 @@ CHUNK_SIZE = 100  # in kilobytes
 logger = logging.getLogger(__name__)
 
 
-async def archive(request, base_archive_path, process_delay=None):
+async def archive(request, base_archive_path, process_delay):
     archive_hash = request.match_info.get('archive_hash')
     archive_path = os.path.join(base_archive_path, archive_hash)
-    # TODO import 'test_photos' from env or as argument
     if not os.path.exists(archive_path):
         raise web.HTTPNotFound(text='Архив не существует или был удален')
 
@@ -37,13 +36,13 @@ async def archive(request, base_archive_path, process_delay=None):
         while not process.stdout.at_eof():
             # read data in chunk converted from kilobytes to bytes
             chunk = await process.stdout.read(CHUNK_SIZE * 1024)
-            # await asyncio.sleep(50)
+            if process_delay:
+                await asyncio.sleep(process_delay)
             logging.info(
                 f'{counter * CHUNK_SIZE}Kb: Sending archive chunk ...')
             await response.write(chunk)
             counter += 1
-            # if counter == 10:
-            #     raise SystemExit
+
     except asyncio.CancelledError:
         logger.error('Download was interrupted')
         raise
@@ -64,6 +63,7 @@ if __name__ == '__main__':
     env.read_env()
     base_archive_path = env('BASE_ARCHIVE_PATH', 'test_photos')
     activate_logs = env.bool('ACTIVATE_LOGS', True)
+    process_delay = env.int('PROCESS_DELAY', 0)
 
     logging.basicConfig(
         format='%(asctime)s - %(levelname)s : %(message)s',
@@ -73,7 +73,11 @@ if __name__ == '__main__':
     if not activate_logs:
         logging.disable()
 
-    archive_with_args = partial(archive, base_archive_path=base_archive_path)
+    archive_with_args = partial(
+        archive,
+        base_archive_path=base_archive_path,
+        process_delay=process_delay
+    )
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
