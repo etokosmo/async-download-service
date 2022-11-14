@@ -5,7 +5,7 @@ import os
 import aiofiles
 from aiohttp import web
 
-CHUNK_SIZE = 100
+CHUNK_SIZE = 100  # in kilobytes
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +30,24 @@ async def archive(request):
 
     await response.prepare(request)
 
-    while not process.stdout.at_eof():
-        # convert chunk from kilobytes to bytes
-        chunk = await process.stdout.read(CHUNK_SIZE * 1024)
-        logging.info('Sending archive chunk ...')
-        await response.write(chunk)
-    return response
+    try:
+        counter = 1
+        while not process.stdout.at_eof():
+            # read data in chunk converted from kilobytes to bytes
+            chunk = await process.stdout.read(CHUNK_SIZE * 1024)
+            # await asyncio.sleep(50)
+            logging.info(
+                f'{counter * CHUNK_SIZE}Kb: Sending archive chunk ...')
+            await response.write(chunk)
+            counter += 1
+            # if counter == 10:
+            #     raise SystemExit
+    except asyncio.CancelledError:
+        logger.error('Download was interrupted')
+        raise
+    finally:
+        process.kill()
+        return response
 
 
 async def handle_index_page(request):
