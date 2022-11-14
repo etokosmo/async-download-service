@@ -4,13 +4,14 @@ import os
 
 import aiofiles
 from aiohttp import web
+from environs import Env
 
 CHUNK_SIZE = 100  # in kilobytes
 
 logger = logging.getLogger(__name__)
 
 
-async def archive(request):
+async def archive(request, process_delay=None, base_archive_path=None):
     archive_hash = request.match_info.get('archive_hash')
     archive_path = os.path.join('test_photos', archive_hash)
     # TODO import 'test_photos' from env or as argument
@@ -58,11 +59,19 @@ async def handle_index_page(request):
 
 
 if __name__ == '__main__':
+    env = Env()
+    env.read_env()
+    base_archive_path = env('BASE_ARCHIVE_PATH', 'test_photos')
+    activate_logs = env.bool('ACTIVATE_LOGS', True)
+
     logging.basicConfig(
         format='%(asctime)s - %(levelname)s : %(message)s',
         datefmt='%d/%m/%Y %H:%M:%S',
         level=logging.INFO
     )
+    if not activate_logs:
+        logging.disable()
+
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
