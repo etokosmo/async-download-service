@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 async def archive(request, base_archive_path, process_delay):
     archive_hash = request.match_info.get('archive_hash')
+    if archive_hash is None:
+        raise web.HTTPNotFound(text='Хэш не был указан или указан неправильно')
     archive_path = os.path.join(base_archive_path, archive_hash)
     if not os.path.exists(archive_path):
         raise web.HTTPNotFound(text='Архив не существует или был удален')
