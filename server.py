@@ -41,7 +41,7 @@ async def archive(request, base_archive_path, process_delay):
             if process_delay:
                 await asyncio.sleep(process_delay)
             logging.info(
-                f'{chunk_counter * CHUNK_SIZE}bytes: Sending archive chunk ...')
+                f'{chunk_counter * CHUNK_SIZE}bytes: Sending archive chunk...')
             await response.write(chunk)
             chunk_counter += 1
 
