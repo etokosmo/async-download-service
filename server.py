@@ -7,7 +7,7 @@ import aiofiles
 from aiohttp import web
 from environs import Env
 
-CHUNK_SIZE = 100  # in kilobytes
+CHUNK_SIZE = 100 * 1024  # convert size from kilobytes (100) to bytes
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +34,12 @@ async def archive(request, base_archive_path, process_delay):
     try:
         chunk_counter = 1
         while not process.stdout.at_eof():
-            # read data in chunk converted from kilobytes to bytes
-            chunk = await process.stdout.read(CHUNK_SIZE * 1024)
+            # read data in chunk
+            chunk = await process.stdout.read(CHUNK_SIZE)
             if process_delay:
                 await asyncio.sleep(process_delay)
             logging.info(
-                f'{chunk_counter * CHUNK_SIZE}Kb: Sending archive chunk ...')
+                f'{chunk_counter * CHUNK_SIZE}bytes: Sending archive chunk ...')
             await response.write(chunk)
             chunk_counter += 1
 
