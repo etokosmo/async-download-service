@@ -47,7 +47,7 @@ async def archive(request, base_archive_path, process_delay):
         logger.error('Download was interrupted')
         raise
     finally:
-        if process.returncode:
+        if process.returncode is None:
             process.kill()
             await process.communicate()
     return response
